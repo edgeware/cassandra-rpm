@@ -85,20 +85,22 @@ function status {
 # Cassandra startup
 function start() {
     check
-    
-    echo -n "Starting ${CASSANDRA}: "
-    su $CASSANDRA_OWNR -c "$PROG -p $PIDFILE" > $LOGFILE 2>&1
-    echo "OK"
-    
-    sleep 1
     status
+    if [ $? -eq 3 ]; then 
+       echo -n "Starting ${CASSANDRA}: "
+       su $CASSANDRA_OWNR -c "$PROG -p $PIDFILE" > $LOGFILE 2>&1
     
-    if [ $? -ne 0 ]; then
-        echo "${CASSANDRA} failed to start. please check the logs."
-        exit 1
-    fi
-  
-    exit 0
+       sleep 1
+       status
+    
+       if [ $? -ne 0 ]; then
+          echo "${CASSANDRA} failed to start. please check the logs."
+          exit 1
+       else
+          echo "OK"      
+       fi
+   fi  
+   exit 0
 }
 
 # Cassandra shutdown
@@ -124,6 +126,7 @@ case "$1" in
         ;;
     reload|restart)
         $0 stop
+	sleep 1
         $0 start
         ;;
     status)
