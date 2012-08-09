@@ -7,7 +7,7 @@
 %define __jar_repack 0
 %global username cassandra
 
-Name:		apache-cassandra
+Name:		apache-cassandra1
 Version:	${version}
 Release:	${buildNumber}.%{osVerTag}
 Summary:	The Apache Cassandra Project develops a highly scalable second-generation distributed database.
