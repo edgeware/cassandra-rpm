@@ -1,0 +1,7 @@
+# Run watchdog.sh every min
+SHELL=/bin/bash
+PATH=/sbin:/bin:/usr/sbin:/usr/bin
+MAILTO=root
+HOME=/
+
+* * * * * root /usr/share/cassandra/sbin/watchdog.sh > /var/log/cassandra/watchdog.log

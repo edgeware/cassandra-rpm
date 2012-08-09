@@ -1,0 +1,44 @@
+<assembly>
+	<formats>
+		<format>tar.gz</format>
+	</formats>
+
+	<includeBaseDirectory>true</includeBaseDirectory>
+	
+	<fileSets>
+		<!-- Copy installation Scripts -->
+		<fileSet>
+			<directory>${project.build.outputDirectory}/install/bin</directory>
+			<outputDirectory>/</outputDirectory>
+			<includes>
+				<include>**/*</include>
+			</includes>
+			<fileMode>755</fileMode>
+		</fileSet>
+
+		<fileSet>
+			<directory>${project.build.outputDirectory}/install/share</directory>
+			<outputDirectory>/</outputDirectory>
+			<includes>
+				<include>**/*</include>
+			</includes>
+		</fileSet>
+
+		<fileSet>
+			<directory>${project.build.outputDirectory}/misc</directory>
+			<outputDirectory>/misc</outputDirectory>
+			<includes>
+				<include>**/*</include>
+			</includes>
+		</fileSet>
+		
+		<fileSet>
+            <directory>${project.build.outputDirectory}/redhat</directory>
+            <outputDirectory>/</outputDirectory>
+            <includes>
+                <include>**/*</include>
+            </includes>
+        </fileSet>
+	</fileSets>
+
+</assembly>
