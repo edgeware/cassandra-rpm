@@ -87,10 +87,10 @@ function wait_for_it() {
     for i in {0..10}; do
         su $CASSANDRA_OWNR -c "echo \"describe cluster\" | $CLI --batch -h localhost &> /dev/null"
         RES=$?
-	if [[ $RES == $1 ]]; then
+        if [[ $RES == $1 ]]; then
             break
         fi
-	sleep 0.5
+        sleep 0.5
         let i+=1
     done
     return $RES
