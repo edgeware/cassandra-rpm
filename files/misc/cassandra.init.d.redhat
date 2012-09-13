@@ -18,13 +18,14 @@
 
 . /etc/rc.d/init.d/functions
 
-if [ -f /etc/sysconfig/cassandra ]; then 
+if [ -f /etc/sysconfig/cassandra ]; then
   . /etc/sysconfig/cassandra
 fi
 
 PIDFILE=${PIDFILE:-"/var/run/cassandra/cassandra.pid"}
 LOGFILE=/var/log/cassandra/cassandra.log
 PROG=${CASSANDRA_HOME}/bin/cassandra
+CLI=${CASSANDRA_HOME}/bin/cassandra-cli
 CASSANDRA="Cassandra"
 
 # The first existing directory is used for JAVA_HOME if needed.
@@ -61,7 +62,7 @@ export JAVA_HOME JAVA
 function check() {
     # Check that we're a privileged user
     if [ $(id -u) -ne 0 ]; then
-        echo "Please run as a privileged user" 
+        echo "Please run as a privileged user"
         exit 4
     fi
 }
@@ -76,44 +77,66 @@ function status {
             RUNNING_PID=$TMP_PID
             return 0  # running
         else
-            return 1  # stopped, but pid file exists 
+            return 1  # stopped, but pid file exists
         fi
     fi
     return 3 # stopped
+}
+
+function wait_for_it() {
+    for i in {0..10}; do
+        su $CASSANDRA_OWNR -c "echo \"describe cluster\" | $CLI --batch -h localhost &> /dev/null"
+        RES=$?
+        if [[ $RES == $1 ]]; then
+            break
+        fi
+        sleep 0.5
+        let i+=1
+    done
+    return $RES
 }
 
 # Cassandra startup
 function start() {
     check
     status
-    if [ $? -eq 3 ]; then 
+    if [ $? -eq 3 ]; then
        echo -n "Starting ${CASSANDRA}: "
        su $CASSANDRA_OWNR -c "$PROG -p $PIDFILE" > $LOGFILE 2>&1
-    
-       sleep 1
+
+       wait_for_it 0
        status
-    
+
        if [ $? -ne 0 ]; then
           echo "${CASSANDRA} failed to start. please check the logs."
           exit 1
        else
-          echo "OK"      
+          echo "OK"
        fi
-   fi  
+   fi
    exit 0
 }
 
 # Cassandra shutdown
 function stop() {
     check
-     
+
     status
-    if [ $? -ne 0 ]; then 
+    if [ $? -ne 0 ]; then
         echo "${CASSANDRA} is not running.  aborting."
     else
         echo -n "Shutdown ${CASSANDRA}: "
         su $CASSANDRA_OWNR -c "kill `cat $PIDFILE`"
-        echo "OK"
+
+        wait_for_it 255
+        status
+
+        if [ $? -ne 3 ]; then
+           echo "${CASSANDRA} didn't stop."
+           exit 1
+        else
+           echo "OK"
+        fi
     fi
 }
 
@@ -122,7 +145,7 @@ case "$1" in
         start
         ;;
     stop)
-        stop 
+        stop
         ;;
     reload|restart)
         $0 stop
@@ -131,7 +154,7 @@ case "$1" in
         ;;
     status)
         status
-        
+
         RET=$?
         if [ $RET -eq 0 ]; then
             echo "${CASSANDRA} (pid $RUNNING_PID) is running..."
